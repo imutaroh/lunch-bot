@@ -32,9 +32,13 @@ func NewLunchService(slack SlackRepository, channelID string) *LunchService {
 	}
 }
 
+// Slack は chat.postMessage の Unicode絵文字を内部で colon-code に正規化して保存する。
+// (例: "🍽️" → ":knife_fork_plate:" / "🎉" → ":tada:")
+// conversations.history から戻ってくる text は colon-code 形式なので、
+// prefix 検索もそれに合わせる。投稿側 (recruitmentText) は Unicode のままでOK。
 const (
-	recruitPrefix  = "🍽️ 今週のランチ参加者募集！"
-	announcePrefix = "🎉 今週のランチグループ決定！"
+	recruitPrefix  = ":knife_fork_plate: 今週のランチ参加者募集！"
+	announcePrefix = ":tada: 今週のランチグループ決定！"
 )
 
 const recruitmentText = `🍽️ 今週のランチ参加者募集！
