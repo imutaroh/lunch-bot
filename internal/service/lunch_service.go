@@ -33,12 +33,13 @@ func NewLunchService(slack SlackRepository, channelID string) *LunchService {
 }
 
 // Slack は chat.postMessage の Unicode絵文字を内部で colon-code に正規化して保存する。
-// (例: "🍽️" → ":knife_fork_plate:" / "🎉" → ":tada:")
+// (例: "🍽️" → ":knife_fork_plate:" / "🎉" → ":tada:" / "😿" → ":crying_cat_face:")
 // conversations.history から戻ってくる text は colon-code 形式なので、
-// prefix 検索もそれに合わせる。投稿側 (recruitmentText) は Unicode のままでOK。
+// prefix 検索もそれに合わせる。投稿側のテキスト定数は Unicode のままでOK。
 const (
 	recruitPrefix  = ":knife_fork_plate: 今週のランチ参加者募集！"
 	announcePrefix = ":tada: 今週のランチグループ決定！"
+	restPrefix     = ":crying_cat_face: 今週は参加者が少なかった"
 )
 
 const recruitmentText = `🍽️ 今週のランチ参加者募集！
@@ -81,9 +82,11 @@ func (s *LunchService) RunAnnounce() error {
 		return fmt.Errorf("bot 投稿が直近 %dh に見つからない (recruit が走っていない可能性)", s.lookbackHours)
 	}
 
-	// 冪等性チェック: 直近の bot 投稿が既に発表ならスキップ
-	if strings.HasPrefix(msgs[0].Text, announcePrefix) {
-		fmt.Println("[announce] 直近に発表済みのためスキップ (idempotency)")
+	// 冪等性チェック: 直近の bot 投稿が「発表」または「お休み」ならスキップ。
+	// どちらも "今週分の announce が完了した" シグナルなので、二度実行しても実害が出ない。
+	latest := msgs[0].Text
+	if strings.HasPrefix(latest, announcePrefix) || strings.HasPrefix(latest, restPrefix) {
+		fmt.Println("[announce] 今週分は既に処理済みのためスキップ (idempotency)")
 		return nil
 	}
 
