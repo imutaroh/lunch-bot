@@ -1,0 +1,23 @@
+# 秘密情報
+.env
+*.local
+.env.local
+
+# Go ビルド成果物
+*.exe
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# テスト・カバレッジ
+*.test
+*.out
+coverage.out
+
+# 開発エディタ
+.idea/
+.vscode/
+*.swp
+.DS_Store
