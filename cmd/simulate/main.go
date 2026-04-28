@@ -1,22 +1,23 @@
-// cmd/simulate は announce フローを任意の参加者数で擬似実行するツール。
+// cmd/simulate は announce フローを任意の参加者で擬似実行するツール。
 //
 // 使い方:
 //
-//	go run ./cmd/simulate -n 8              # 8人参加した想定 (コンソール出力のみ)
-//	go run ./cmd/simulate -n 0              # 0人 → 「お休み」メッセージのパス
-//	go run ./cmd/simulate -n 12 -post       # ★ 12人参加 + 結果を実際にSlackへ投稿
+//	go run ./cmd/simulate -n 8                              # 8人の偽ユーザー
+//	go run ./cmd/simulate -n 12 -post                       # 結果を実Slackに投稿 (mentionは偽IDなので通知は飛ばない)
+//	go run ./cmd/simulate -users U0AAA,U0BBB,U0CCC -post    # ★ 実IDを指定: 該当ユーザーにガチで通知が飛ぶ
 //
-// 仕組み: service.SlackRepository インターフェイスを満たす偽実装 (fakeSlack) を
-// service に渡す。読み取り (GetReactionUsers / RecentBotMessages / WhoAmI) は常に
-// 偽実装で、N人を仕込める。書き込み (PostMessage) は -post を付けると本物の
-// SlackClient へ委譲し、実チャンネルに発表が出る (mention は U001 等の偽IDなので
-// テキストとして表示される)。
+// -users は -n より優先される。-users の各 ID は実Slackユーザーなら通知され、
+// 偽IDならテキストのまま表示される (両方混ぜてもOK)。
+//
+// 仕組み: service.SlackRepository の偽実装 (fakeSlack) を service に渡す。
+// 読み取りは常に偽、書き込みは -post で本物のSlackに転送するハイブリッド。
 package main
 
 import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/imutaakihiro/lunch-bot/internal/config"
 	"github.com/imutaakihiro/lunch-bot/internal/repository"
@@ -30,11 +31,10 @@ type fakeSlack struct {
 	reactionUsers []string
 	recruitText   string
 
-	real        *repository.SlackClient // 非nilなら PostMessage を実Slackへ転送
+	real        *repository.SlackClient
 	realChannel string
 }
 
-// PostMessage はコンソールに出力 + (-post時のみ) 実Slackへも投稿。
 func (f *fakeSlack) PostMessage(channel, text string) (string, error) {
 	fmt.Println("─── [fake] PostMessage ───")
 	fmt.Println(text)
@@ -50,48 +50,61 @@ func (f *fakeSlack) PostMessage(channel, text string) (string, error) {
 	return "fake-post-ts", nil
 }
 
-// AddReaction は recruit モードでだけ呼ばれる (announce では通らない)。
 func (f *fakeSlack) AddReaction(channel, timestamp, emoji string) error {
 	return nil
 }
 
-// GetReactionUsers は事前に仕込んだ参加者IDリストをそのまま返す。
-// これがシミュレータの中核: 「N人が🍱を押した状態」の正体は
-// このスライスにN個のIDが入っている、というだけ。
 func (f *fakeSlack) GetReactionUsers(channel, timestamp, emoji string) ([]string, error) {
 	return f.reactionUsers, nil
 }
 
-// WhoAmI は service が「自分のID」を取得するときに呼ぶ。
 func (f *fakeSlack) WhoAmI() (string, error) {
 	return f.botUserID, nil
 }
 
-// RecentBotMessages は「直近に bot が投稿した募集メッセージ」を1件だけ仕込んで返す。
-// テキストの先頭が service.recruitPrefix と一致するので募集として認識される。
-// 冪等性チェック (発表/お休みなら skip) もこのメッセージは素通りする。
 func (f *fakeSlack) RecentBotMessages(channel, botUserID string, sinceHours int) ([]repository.BotMessage, error) {
 	return []repository.BotMessage{
 		{TS: "fake-recruit-ts", Text: f.recruitText},
 	}, nil
 }
 
-func main() {
-	n := flag.Int("n", 5, "bot自身を除いた人間の参加者数")
-	post := flag.Bool("post", false, "結果を実際のSlackチャンネルに投稿する (要 SLACK_BOT_TOKEN / SLACK_CHANNEL_ID)")
-	flag.Parse()
-
-	if *n < 0 {
-		log.Fatalf("参加者数は0以上で指定してください: %d", *n)
+// parseUserList はカンマ区切りのID文字列をスライスに変換する。空・空白は無視。
+func parseUserList(s string) []string {
+	out := []string{}
+	for _, id := range strings.Split(s, ",") {
+		id = strings.TrimSpace(id)
+		if id != "" {
+			out = append(out, id)
+		}
 	}
+	return out
+}
+
+func main() {
+	n := flag.Int("n", 5, "bot自身を除いた偽ユーザー数 (-users と併用時は -users が優先)")
+	usersStr := flag.String("users", "", "実ユーザーIDをカンマ区切りで指定 (例: U0AAA,U0BBB,U0CCC)")
+	post := flag.Bool("post", false, "結果を実Slackに投稿する (要 SLACK_BOT_TOKEN / SLACK_CHANNEL_ID)")
+	flag.Parse()
 
 	const botID = "Ufakebot"
 
-	users := make([]string, 0, *n+1)
-	users = append(users, botID)
-	for i := 1; i <= *n; i++ {
-		users = append(users, fmt.Sprintf("U%03d", i))
+	// 人間側ユーザーリストを決める。-users が指定されたらそれを使い、
+	// なければ -n で偽ID (U001, U002, ...) を生成する。
+	var humans []string
+	if *usersStr != "" {
+		humans = parseUserList(*usersStr)
+		fmt.Printf("[simulate] -users 指定: %v\n", humans)
+	} else {
+		if *n < 0 {
+			log.Fatalf("参加者数は0以上で指定してください: %d", *n)
+		}
+		for i := 1; i <= *n; i++ {
+			humans = append(humans, fmt.Sprintf("U%03d", i))
+		}
 	}
+
+	// bot自身を先頭に入れる (除外ロジックの動作確認も兼ねる)
+	users := append([]string{botID}, humans...)
 
 	fake := &fakeSlack{
 		botUserID:     botID,
@@ -109,7 +122,7 @@ func main() {
 		fmt.Printf("[simulate] -post モード: 結果を %s に実投稿します\n", cfg.SlackChannelID)
 	}
 
-	fmt.Printf("[simulate] 人間 %d 人 + bot 1 = 計 %d 人がリアクションした想定で announce 実行\n\n", *n, *n+1)
+	fmt.Printf("[simulate] 人間 %d 人 + bot 1 = 計 %d 人がリアクションした想定で announce 実行\n\n", len(humans), len(humans)+1)
 
 	svc := service.NewLunchService(fake, "fake-channel")
 	if err := svc.RunAnnounce(); err != nil {
