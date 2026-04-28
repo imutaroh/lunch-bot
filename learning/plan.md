@@ -44,15 +44,16 @@
 
 ### Day 0 (Day 1 冒頭 30分): 比較読み
 
-- [ ] **Loop 0** (30分) — `spec.md` と `README.md` だけ読んで、コードを見ずに `notes/00_my_hypothesis.md` を書く
+- [x] **Loop 0** (30分) — `spec.md` と `README.md` だけ読んで、コードを見ずに `notes/00_my_hypothesis.md` を書く
   - 内容: 自分なら lunch-bot をどう実装するか (ファイル構成・関数の引数戻り値・想定エラー・データの流れ)
   - **これは絶対にコードを見る前に書く** — 後で見比べた時の "自分の仮説" は、書いた瞬間しか正直に残せない
 
 ### Day 1 (5.5h): 全体地図 + 入口
 
-- [ ] **Loop 1** (1.5h) — `main.go` (Phase 1) + `cmd/bot/main.go`
+- [x] **Loop 1** (1.5h) — `main.go` (Phase 1) + `cmd/bot/main.go`
   - 学び: package, import, os.Args, log.Fatal, DI 配線
   - 出力: `notes/01_main.md` + `notes/02_cmd_bot.md` (Counter-design 含む)
+  - ※ `01_main.md` の整理リライトと `02_cmd_bot.md` の型名追記は持ち越し (Loop 2-6 で型定義を読んだ後に戻る)
 - [ ] **Loop 2** (1.5h) — `internal/config/config.go` + `internal/handler/lunch_handler.go`
   - 学び: struct, ポインタレシーバ, error 返値
   - 出力: `notes/03_config.md` + `notes/04_handler.md`

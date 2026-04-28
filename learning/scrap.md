@@ -28,6 +28,34 @@
 
 ---
 
+## 2026-04-28 Day 1 Loop 1 完走
+
+### 達成
+- Loop 0 (比較読み) ✅ — `00_my_hypothesis.md`
+- Loop 1 前半 (`main.go` = Phase 1の Hello world) ✅ — HTTP直叩きの全体像を理解
+- Loop 1 後半 (`cmd/bot/main.go` = 本体エントリ) ✅ — 3層構造を発見
+
+### 今日掴んだ概念 (新出)
+- パッケージ7つ (os / log / encoding/json / bytes / net/http / io / fmt) の役割と WHEN
+- HTTP の5概念: クライアント vs サーバー / ステートレス / リクエスト4要素 / レスポンス4要素 / メソッド・ステータスコード
+- ヘッダー = "本文と別の伝票情報" (Authorization / Content-Type)
+- Goの struct とドット記法 (`req.Header.Set`)
+- 3層構造 (handler / service / repository) と組み立ての依存順
+- 型 / 関数 / メソッドの区別と `New○○` 命名慣習
+- Stderr (エラー専用の出力チャンネル) と `fmt.Fprintln` の F = File
+- switch を選ぶ理由 (= 並列の選択肢を意図として表現)
+
+### 持ち越し (次のループで戻ってくる)
+- `01_main.md` を今日の理解で整理リライト
+- `02_cmd_bot.md` の「2. 主な型」に型名 (SlackClient / LunchService / LunchHandler / Config) を追記
+  - 中身の理解は Loop 2-6 で各定義ファイルを読んだ後に深掘り
+
+### 学習姿勢メモ
+- 「全部完璧にやってから次へ」ではなく「今80点で次へ、後で戻って100点」を採用
+- usage関数の疑問など「分からないことを正確に言語化する」姿勢が出てきた
+
+---
+
 ## デイリーレビューのテンプレ
 
 各日の終わりに、以下の形式で `scrap.md` に追記する:
