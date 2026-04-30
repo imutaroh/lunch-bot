@@ -54,8 +54,8 @@
   - 学び: package, import, os.Args, log.Fatal, DI 配線
   - 出力: `notes/01_main.md` + `notes/02_cmd_bot.md` (Counter-design 含む)
   - ※ `01_main.md` の整理リライトと `02_cmd_bot.md` の型名追記は持ち越し (Loop 2-6 で型定義を読んだ後に戻る)
-- [ ] **Loop 2** (1.5h) — `internal/config/config.go` + `internal/handler/lunch_handler.go`
-  - 学び: struct, ポインタレシーバ, error 返値
+- [x] **Loop 2** (1.5h) — `internal/config/config.go` + `internal/handler/lunch_handler.go`
+  - 学び: struct, ポインタレシーバ, error 返値, 関数 vs メソッド, コンストラクタパターン (`NewXxx`), error 型は "通知書", 「そのまま外に返す」の意味
   - 出力: `notes/03_config.md` + `notes/04_handler.md`
 - [ ] **Loop 3** (2h) — `internal/service/lunch_service.go` 前半 (interface + RunRecruit)
   - 学び: **interface**, 依存性注入 (DI), `fmt.Errorf %w`
