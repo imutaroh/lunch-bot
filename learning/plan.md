@@ -2,6 +2,8 @@
 
 ## 主目標 (Level 2 — Definition of Done)
 
+> **定量目標版 (2026-05-07 更新)**: `goals.md` に「**笹本さん向け 研修発表 (5/15 金 本番)**」の定量チェックリスト (A説明 / B実装 / C プレゼン / D Polaris接続) を切り出した。重点は **3層アーキ + DI** に集中。8日計画 (5/7→5/15) で進行。以下は元の Level 2 概要。
+
 - [ ] 9 ファイル全部に `notes/XX_filename.md` を完成 (各 6 項目 — 後述「notes の書き方」参照)
 - [ ] ETL対応図を1枚描く (Extract / Transform / Load にコードのどこが対応するか)
 - [ ] 主要設計判断 5つ を各 200〜400字で説明できる文章を残す
@@ -64,19 +66,26 @@
 
 ### Day 2 (6h): 業務ロジック深掘り + 初の破壊テスト
 
-- [ ] **Loop 4** (2h) — `lunch_service.go` 後半 (RunAnnounce)
+- [x] **Loop 4** (2h) — `lunch_service.go` 後半 (RunAnnounce)
   - 学び: 冪等性, prefix判定, bot除外, 早期return
   - 出力: `notes/05_service.md` 完成
-- [ ] **Loop 5** (2h) — `internal/service/shuffler.go` + `shuffler_test.go`
+  - 副産物: interface の "因果関係" 整理 (使う場所 → 実装が要る)、`msgs` の正体 = Slackスナップショット、`make` の容量指定の意味
+- [x] **Loop 5** (2h) — `internal/service/shuffler.go` + `shuffler_test.go`
   - 学び: math/rand, スライス分割, テーブル駆動テスト
   - 出力: `notes/06_shuffler.md`
-- [ ] **Loop 6 前半** (1h) — `slack_client.go` 前半 (PostMessage, AddReaction)
-- [ ] **Day 2 破壊テスト** (30分) — 例: bot 除外の `excludeUser` を消したらどうなる？シミュレータで検証。`scrap.md` に観察ログ
-- [ ] **Day 2 デイリーレビュー** (30分)
+  - 副産物: `rand.Shuffle` の "関数を渡す" 高階関数パターン、Fisher-Yates の swap 回数 (n-1) を実験で確認、公式 `(n+2)/4` の「四捨五入イディオム」
+- [x] **Loop 6 前半** (1h) — `slack_client.go` (ブラックボックス読み)
+  - 方針変更: HTTP 詳細はご主人様判断で「Webを支える技術」(山本陽平 著) で別途学習する流れに
+  - 出力: `notes/07_slack_client.md` (構造 + 5メソッドの入出力 + interface との対応)
+  - 後半 (auth.test, conversations.history, helpers の中身) も同じくブラックボックスで通過、HTTP 学習後に再読
+- [x] **Day 2 破壊テスト** (30分) — `excludeUser` をコメントアウトして `simulate -n 4` 実行 → bot が `Ufakebot` として混入 + グループサイズ狂い + ログ文言が嘘になる現象を観察 (`scrap.md` 記録)
+- [x] **Day 2 デイリーレビュー** (Claude 下書き済 → ご主人様が直す予定。3+3+3 を `scrap.md` に記録)
 
 ### Day 3 (6h): I/O + シミュレータ + 振り返り
 
-- [ ] **Loop 6 後半** (2h) — `slack_client.go` 後半 (auth.test, conversations.history, helpers)
+- [ ] **Loop 6 後半** (HTTP 学習後に戻る) — `slack_client.go` 後半 (auth.test, conversations.history, helpers)
+  - ブラックボックス通過済み (Day 2 で前半とまとめて)
+  - 「Webを支える技術」読了後に詳細パート (`json.Marshal/Unmarshal`, `http.NewRequest`, `c.doJSON` の中身) を再読
 - [ ] **Loop 7** (2h) — `cmd/simulate/main.go`
   - 学び: fakeSlack, **interface の威力体感**, テストダブル
   - 出力: `notes/08_simulate.md`

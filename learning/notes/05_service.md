@@ -319,6 +319,59 @@ stdout。
 - GitHub Actions → ワークフローログ
 - 普段は誰も読まない、**障害時に開く**。
 
+#### (e) interface の "実装する側" と "使う側" の因果関係 (Day 2 復習で誤解した点)
+
+最初「interface を定義したら、必ずどこかで実装しなきゃいけない」と思った。**因果が逆**。
+
+正しくは:
+- interface 定義そのものは何も強制しない (ただの型宣言)
+- **interface を "受け取る場所"** (フィールド / 引数 / 戻り値) に値を渡そうとした瞬間、その値の型が **5メソッド全部実装してるか** 検査される
+- 欠けてたらコンパイルエラー: `*fakeSlack does not implement SlackRepository (missing method WhoAmI)`
+
+→ つまり「interface があるから実装が要る」ではなく「**使う場所があるから実装が要る**」。
+→ 実用的には "interface 定義 + 使う場所 + 実装する型" の3点セットで初めて意味がある。
+
+ついでに、最初「形は何でもいい、5つ持ってれば」と曖昧に理解したら混乱した。正確には:
+
+| 何が | 自由度 |
+|---|---|
+| **struct の中のフィールド (内部状態)** | 何でもいい (本物は token/httpClient、fake は msgs/real など全然違う) |
+| **interface に書かれたメソッド** | 5つ全部必須、1個でも欠けたらアウト |
+
+#### (f) `make([]string, 0, len(users))` の `len(users)` の意味
+
+第3引数 = **容量** (= "最大何件入る予定?" の事前申告)。第2引数 (長さ) とは別物。
+
+- 第2引数 `0` → 初期の要素数 (空)
+- 第3引数 `len(users)` → 最大値の予測 = 事前にメモリを確保しておくサイズ
+
+なぜ事前確保?
+- スライスは append で容量を超えると **裏で全コピーして拡張** する (引っ越し)
+- 最大サイズが分かってれば最初に確保しておく → 引っ越しゼロ → ちょっと速い
+
+excludeUser は「bot を除外するだけ」 → out のサイズは絶対に users 以下 → `len(users)` で十分予測できる。
+
+#### (g) `msgs` の正体 = Slack のスナップショット
+
+最初「`msgs` は何? どこで定義されてる? 毎回 Slack を見にいってるの?」で混乱した。
+
+整理:
+- `msgs` はローカル変数 (Goメモリ上)
+- 中身 = `RecentBotMessages()` が返した **`[]repository.BotMessage`** (struct のスライス)
+- 毎回 RunAnnounce が走るたびに **HTTP で Slack から取得し直す** (= スナップショット)
+- `s.lookbackHours = 26` で時間制限 (直近26時間の bot 投稿だけ)
+
+`BotMessage` 自体は超シンプル: `{ TS string; Text string }` だけ。
+
+→ ETL の文脈で見ると一発で腹落ちする:
+```
+[Extract]   77行: RecentBotMessages()      ← Slack から取得 (msgs)
+[Transform] 88-120行: 冪等性 / 募集探し / 集計 / Shuffle / 整形
+[Load]      122行: PostMessage()             ← 結果を Slack に投稿
+```
+
+これが `notes/00_overview.md` で図示する "ETL 対応図" の中核。
+
 ---
 
 ### 5. 他にもありえた選択 (Counter-design)
