@@ -57,10 +57,10 @@
 - [x] **Loop 2** (1.5h) — `internal/config/config.go` + `internal/handler/lunch_handler.go`
   - 学び: struct, ポインタレシーバ, error 返値, 関数 vs メソッド, コンストラクタパターン (`NewXxx`), error 型は "通知書", 「そのまま外に返す」の意味
   - 出力: `notes/03_config.md` + `notes/04_handler.md`
-- [ ] **Loop 3** (2h) — `internal/service/lunch_service.go` 前半 (interface + RunRecruit)
+- [x] **Loop 3** (2h) — `internal/service/lunch_service.go` 前半 (interface + RunRecruit)
   - 学び: **interface**, 依存性注入 (DI), `fmt.Errorf %w`
   - 出力: `notes/05_service.md` 前半
-- [ ] **Day 1 デイリーレビュー** (30分) — `scrap.md` に 3+3+3
+- [x] **Day 1 デイリーレビュー** (30分) — `scrap.md` に 3+3+3
 
 ### Day 2 (6h): 業務ロジック深掘り + 初の破壊テスト
 

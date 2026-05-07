@@ -45,8 +45,8 @@ func decideGroupSizes(n int) []int {
 
 	// グループ数 = n/4 を四捨五入。(n+2)/4 で切り上げ/切り捨ての境界がちょうど 0.5 相当になる。
 	numGroups := (n + 2) / 4
-	base := n / numGroups     // 全グループの最低人数
-	extra := n % numGroups    // この数だけ +1 人のグループを作る
+	base := n / numGroups  // 全グループの最低人数
+	extra := n % numGroups // この数だけ +1 人のグループを作る
 
 	sizes := make([]int, numGroups)
 	for i := 0; i < numGroups; i++ {
