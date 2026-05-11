@@ -10,7 +10,9 @@ type Config struct {
 	SlackChannelID string
 }
 
+// 環境変数を取得する関数
 func Load() (*Config, error) {
+	// いまのプロセスの環境変数を読む
 	cfg := &Config{
 		SlackBotToken:  os.Getenv("SLACK_BOT_TOKEN"),
 		SlackChannelID: os.Getenv("SLACK_CHANNEL_ID"),
@@ -23,5 +25,6 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("SLACK_CHANNEL_ID is required")
 	}
 
+	// うまくいったときは、*Configにcfg、errorはnilが入る
 	return cfg, nil
 }

@@ -23,6 +23,7 @@ type LunchService struct {
 	lookbackHours int
 }
 
+// LunchServiceを定義する
 func NewLunchService(slack SlackRepository, channelID string) *LunchService {
 	return &LunchService{
 		slack:         slack,
@@ -67,6 +68,7 @@ func (s *LunchService) RunRecruit() error {
 
 // RunAnnounce は火曜09:00 (JST) に呼ばれる: 募集投稿を見つけてリアクションを集計し、
 // グループ分けして発表する。冪等性チェックあり (直近が発表済みならスキップ)。
+// 身元確認用のリクエストを作成して、BotのIDを取得
 func (s *LunchService) RunAnnounce() error {
 	botID, err := s.slack.WhoAmI()
 	if err != nil {

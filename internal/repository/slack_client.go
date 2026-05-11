@@ -17,10 +17,11 @@ type SlackClient struct {
 	httpClient *http.Client
 }
 
+// SlackのTokenを取得して新しい構造体を作る関数
 func NewSlackClient(token string) *SlackClient {
 	return &SlackClient{
 		token:      token,
-		httpClient: http.DefaultClient,
+		httpClient: http.DefaultClient, // 外の世界に干渉するために定義、httpを送る役割がある
 	}
 }
 
@@ -32,16 +33,20 @@ type postMessageResponse struct {
 	TS    string `json:"ts"`
 }
 
+// メッセージをpostするメソッド
 func (c *SlackClient) PostMessage(channel, text string) (string, error) {
+	// キーと文字の型を定義
 	payload := map[string]string{
 		"channel": channel,
 		"text":    text,
 	}
+
+	// json.Marshalでネット越しで送ることができるjson形式にしてbodyに挿入
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return "", fmt.Errorf("marshal payload: %w", err)
 	}
-
+	// dojsonの定義は戻ってこないといけないわ
 	respBody, err := c.doJSON("POST", "https://slack.com/api/chat.postMessage", body)
 	if err != nil {
 		return "", err
@@ -56,7 +61,7 @@ func (c *SlackClient) PostMessage(channel, text string) (string, error) {
 	return result.TS, nil
 }
 
-// --- reactions.add ---
+// --- reactions.add --- リアクションを追加する
 
 type reactionsAddResponse struct {
 	OK    bool   `json:"ok"`
