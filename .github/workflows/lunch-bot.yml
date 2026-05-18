@@ -29,10 +29,9 @@ jobs:
   run:
     runs-on: ubuntu-latest
     # schedule (定期実行) と workflow_dispatch (手動) で env の解決元が違う:
-    # - schedule: inputs は空なので || の右辺 'dev' に落ちる
+    # - schedule: inputs は空なので || の右辺 'prod' に落ちる
     # - workflow_dispatch: ユーザーが選んだ inputs.env が使われる
-    # 本番 Slack の準備ができたら 'dev' を 'prod' に変えるだけで定期実行が prod に切り替わる。
-    environment: ${{ inputs.env || 'dev' }}
+    environment: ${{ inputs.env || 'prod' }}
     steps:
       - uses: actions/checkout@v4
 
