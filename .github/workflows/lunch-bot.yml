@@ -1,14 +1,11 @@
 name: lunch-bot
 
 on:
-  # 【一時停止 2026-06-08〜】recruit(月)・announce(火)とも手動で本番投稿したため、
-  # 当日の遅延 cron による二重投稿を防ぐ目的で schedule 全体を停止中。
-  # 来週(月曜 2026-06-15 / 火曜 2026-06-16)の前にこのブロックのコメントを外して復活させること。
-  # schedule:
-  #   # 月曜 09:00 JST = 月曜 00:00 UTC
-  #   - cron: '0 0 * * 1'
-  #   # 火曜 09:00 JST = 火曜 00:00 UTC
-  #   - cron: '0 0 * * 2'
+  schedule:
+    # 月曜 09:00 JST = 月曜 00:00 UTC
+    - cron: '0 0 * * 1'
+    # 火曜 09:00 JST = 火曜 00:00 UTC
+    - cron: '0 0 * * 2'
   workflow_dispatch:
     inputs:
       mode:
