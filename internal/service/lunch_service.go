@@ -29,7 +29,8 @@ func NewLunchService(slack SlackRepository, channelID string) *LunchService {
 		slack:         slack,
 		channelID:     channelID,
 		emoji:         "bento",
-		lookbackHours: 26,
+		// 募集(月曜07:00)〜発表(火曜09:00)はちょうど26h。cron遅延を考慮して余裕を持たせる。
+		lookbackHours: 30,
 	}
 }
 
@@ -50,7 +51,7 @@ const recruitmentText = `🍽️ 今週のランチ参加者募集！ <!channel>
 const restMessageText = `😿 今週は参加者が少なかったのでお休みです
 また来週叩いてください`
 
-// RunRecruit は月曜09:00 (JST) に呼ばれる: 募集投稿 + bot 自身が🍱を1個押す。
+// RunRecruit は月曜07:00 (JST) に呼ばれる: 募集投稿 + bot 自身が🍱を1個押す。
 func (s *LunchService) RunRecruit() error {
 	fmt.Println("[recruit] 募集投稿を出します")
 	ts, err := s.slack.PostMessage(s.channelID, recruitmentText)
