@@ -43,7 +43,7 @@ const (
 	restPrefix     = ":crying_cat_face: 今週は参加者が少なかった"
 )
 
-const recruitmentText = `🍽️ 今週のランチ参加者募集！
+const recruitmentText = `🍽️ 今週のランチ参加者募集！ <!channel>
 参加したい人は :bento: を押してね
 締切: 火曜09:00 / 水曜のランチで 3〜5人組にランダム振り分けます`
 
